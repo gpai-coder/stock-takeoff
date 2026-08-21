@@ -4,6 +4,7 @@ import { formatDateTime, formatMarketState } from "@/lib/format";
 import { getScreenerResults } from "@/lib/screener";
 import type { ScreenerSearchParams } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 interface HomePageProps {
@@ -56,14 +57,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </div>
         )}
 
-        <ScreenerTable stocks={result.stocks} />
+        <ScreenerTable
+          stocks={result.stocks}
+          relativeVolumeSessionAdjusted={result.relativeVolumeSessionAdjusted}
+        />
 
         <footer className="border-t border-panel-border pt-4 text-xs leading-relaxed text-muted">
           <p>
             Quotes and fundamentals come from Yahoo Finance via an unofficial API wrapper. Values
-            can be delayed outside market hours. Takeoff score weights proximity to the 52-week high
-            (40%), relative volume (35%), and trend vs. the 50-day MA (25%). This is research
-            tooling, not investment advice.
+            can be delayed outside market hours.
+            {result.relativeVolumeSessionAdjusted && (
+              <>
+                {" "}
+                Relative volume is session-adjusted while the market is open so 1.0× means on pace
+                for an average day, not a full day&apos;s volume by mid-morning.
+              </>
+            )}{" "}
+            Takeoff score weights proximity to the 52-week high (40%), relative volume (35%), and
+            trend vs. the 50-day MA (25%). This is research tooling, not investment advice.
           </p>
         </footer>
       </div>

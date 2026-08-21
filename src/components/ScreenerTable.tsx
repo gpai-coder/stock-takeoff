@@ -11,6 +11,7 @@ import type { StockRow } from "@/lib/types";
 
 interface ScreenerTableProps {
   stocks: StockRow[];
+  relativeVolumeSessionAdjusted?: boolean;
 }
 
 function changeClass(value: number | null): string {
@@ -84,7 +85,10 @@ function StockDetail({ stock }: { stock: StockRow }) {
   );
 }
 
-export function ScreenerTable({ stocks }: ScreenerTableProps) {
+export function ScreenerTable({
+  stocks,
+  relativeVolumeSessionAdjusted = false,
+}: ScreenerTableProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   if (stocks.length === 0) {
@@ -108,7 +112,17 @@ export function ScreenerTable({ stocks }: ScreenerTableProps) {
               <th className="px-4 py-3">Price</th>
               <th className="px-4 py-3">Change</th>
               <th className="px-4 py-3">Market cap</th>
-              <th className="px-4 py-3">Rel vol</th>
+              <th className="px-4 py-3">
+                Rel vol
+                {relativeVolumeSessionAdjusted && (
+                  <span
+                    className="ml-1 normal-case tracking-normal text-muted"
+                    title="Adjusted for elapsed regular-session time; 1.0× means on pace for an average day"
+                  >
+                    *
+                  </span>
+                )}
+              </th>
               <th className="px-4 py-3">To 52w high</th>
               <th className="px-4 py-3">Score</th>
               <th className="hidden px-4 py-3 lg:table-cell">Setup</th>
@@ -167,6 +181,13 @@ export function ScreenerTable({ stocks }: ScreenerTableProps) {
           </tbody>
         </table>
       </div>
+      {relativeVolumeSessionAdjusted && (
+        <p className="border-t border-panel-border px-4 py-2 text-xs text-muted">
+          * Relative volume is session-adjusted during regular hours (today&apos;s volume vs. the
+          expected share of a typical day elapsed since 9:30 ET). 1.0× means on pace for an average
+          day.
+        </p>
+      )}
     </section>
   );
 }
