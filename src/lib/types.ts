@@ -66,6 +66,7 @@ export interface StockRow {
 export interface ScreenerResult {
   asOf: string;
   marketState: string | null;
+  relativeVolumeSessionAdjusted: boolean;
   universeSize: number;
   matchedCount: number;
   filters: ScreenerFilters;

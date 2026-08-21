@@ -1,5 +1,10 @@
 import { unstable_cache } from "next/cache";
 import { passesFilters, parseFilters } from "./filters";
+import {
+  getRegularSessionElapsedFraction,
+  isRegularUsSession,
+  sessionAdjustedRelativeVolume,
+} from "./market-session";
 import { buildReason, computeTakeoffScore } from "./scoring";
 import type {
   ScoreInputs,
@@ -22,12 +27,17 @@ function distanceFromHigh(price: number | null, high: number | null): number | n
   return ((high - price) / high) * 100;
 }
 
-function relativeVolume(volume: number | null, avgVolume: number | null): number | null {
-  if (volume == null || avgVolume == null || avgVolume <= 0) return null;
-  return volume / avgVolume;
+interface RelativeVolumeContext {
+  sessionAdjusted: boolean;
+  elapsedFraction: number;
 }
 
-function mapQuoteToStock(quote: RawQuote, fallbackName: string, filters: ScreenerFilters): StockRow {
+function mapQuoteToStock(
+  quote: RawQuote,
+  fallbackName: string,
+  filters: ScreenerFilters,
+  relativeVolumeContext: RelativeVolumeContext,
+): StockRow {
   const missingFields: string[] = [];
   const price = nullableNumber(quote.regularMarketPrice);
   const changePct = nullableNumber(quote.regularMarketChangePercent);
@@ -45,7 +55,10 @@ function mapQuoteToStock(quote: RawQuote, fallbackName: string, filters: Screene
   if (fiftyDayAverage == null) missingFields.push("50-day MA");
 
   const distanceFromHighPct = distanceFromHigh(price, fiftyTwoWeekHigh);
-  const relVolume = relativeVolume(volume, avgVolume);
+  const relVolume = sessionAdjustedRelativeVolume(volume, avgVolume, {
+    sessionAdjusted: relativeVolumeContext.sessionAdjusted,
+    elapsedFraction: relativeVolumeContext.elapsedFraction,
+  });
   const aboveFiftyDayMa =
     price != null && fiftyDayAverage != null ? price >= fiftyDayAverage : null;
   const priceToMaPct =
@@ -95,26 +108,41 @@ async function runScreener(filters: ScreenerFilters): Promise<ScreenerResult> {
   const symbols = universe.map((entry) => entry.symbol);
 
   const { quotes, failedSymbols } = await fetchQuotes(symbols);
+
+  const marketState =
+    quotes.find((quote) => quote.marketState)?.marketState ?? null;
+  const latestQuoteTime = quotes
+    .map((quote) => quoteTimestamp(quote))
+    .filter((time): time is number => time != null)
+    .sort((a, b) => b - a)[0];
+  const referenceTime = latestQuoteTime ? new Date(latestQuoteTime) : new Date();
+  const relativeVolumeSessionAdjusted = isRegularUsSession(marketState);
+  const relativeVolumeContext: RelativeVolumeContext = {
+    sessionAdjusted: relativeVolumeSessionAdjusted,
+    elapsedFraction: relativeVolumeSessionAdjusted
+      ? getRegularSessionElapsedFraction(referenceTime)
+      : 1,
+  };
+
   const stocks = quotes.map((quote) =>
-    mapQuoteToStock(quote, nameBySymbol.get(quote.symbol) ?? quote.symbol, filters),
+    mapQuoteToStock(
+      quote,
+      nameBySymbol.get(quote.symbol) ?? quote.symbol,
+      filters,
+      relativeVolumeContext,
+    ),
   );
 
   const filtered = stocks
     .filter((stock) => passesFilters(stock, filters))
     .sort((a, b) => b.score - a.score || a.symbol.localeCompare(b.symbol));
 
-  const latestQuoteTime = stocks
-    .map((stock) => stock.quoteTime)
-    .filter((time): time is number => time != null)
-    .sort((a, b) => b - a)[0];
-
-  const marketState = stocks.find((stock) => stock.marketState)?.marketState ?? null;
-
   return {
     asOf: latestQuoteTime
-      ? new Date(latestQuoteTime).toISOString()
+      ? referenceTime.toISOString()
       : new Date().toISOString(),
     marketState,
+    relativeVolumeSessionAdjusted,
     universeSize: symbols.length,
     matchedCount: filtered.length,
     filters,
