@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0f14;
+  --foreground: #e8edf2;
+  --muted: #8b9aab;
+  --panel: #121a22;
+  --panel-border: #1f2a36;
+  --accent: #3dd6c6;
+  --accent-dim: #2a9d8f;
+  --positive: #4ade80;
+  --negative: #f87171;
+  --warning: #fbbf24;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-panel: var(--panel);
+  --color-panel-border: var(--panel-border);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-warning: var(--warning);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+table {
+  border-collapse: collapse;
+}
