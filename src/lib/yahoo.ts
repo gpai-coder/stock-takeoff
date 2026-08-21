@@ -1,4 +1,4 @@
-import YahooFinance from "yahoo-finance2";
+import type YahooFinanceType from "yahoo-finance2";
 
 export interface RawQuote {
   symbol: string;
@@ -16,13 +16,24 @@ export interface RawQuote {
   marketState?: string;
 }
 
-const yahooFinance = new YahooFinance({
-  suppressNotices: ["yahooSurvey"],
-  validation: {
-    logErrors: false,
-    logOptionsErrors: false,
-  },
-});
+type YahooFinanceClient = InstanceType<typeof YahooFinanceType>;
+
+let yahooFinancePromise: Promise<YahooFinanceClient> | null = null;
+
+async function getYahooFinance(): Promise<YahooFinanceClient> {
+  if (!yahooFinancePromise) {
+    yahooFinancePromise = import("yahoo-finance2").then(({ default: YahooFinance }) =>
+      new YahooFinance({
+        suppressNotices: ["yahooSurvey"],
+        validation: {
+          logErrors: false,
+          logOptionsErrors: false,
+        },
+      }),
+    );
+  }
+  return yahooFinancePromise;
+}
 
 const BATCH_SIZE = 50;
 
@@ -38,6 +49,7 @@ export async function fetchQuotes(symbols: string[]): Promise<{
   quotes: RawQuote[];
   failedSymbols: string[];
 }> {
+  const yahooFinance = await getYahooFinance();
   const batches = chunk(symbols, BATCH_SIZE);
   const quotes: RawQuote[] = [];
   const failedSymbols: string[] = [];

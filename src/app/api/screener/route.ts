@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getScreenerResults } from "@/lib/screener";
 import type { ScreenerSearchParams } from "@/lib/types";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET(request: Request) {
