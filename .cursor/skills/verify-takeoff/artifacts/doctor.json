@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "baseUrl": "https://stock-takeoff-gpai1.vercel.app",
+  "httpStatus": 200,
+  "errors": [],
+  "asOf": "2026-09-08T19:03:50.000Z",
+  "marketState": "REGULAR",
+  "universeSize": 503,
+  "matchedCount": 0,
+  "relativeVolumeSessionAdjusted": true,
+  "response": {
+    "asOf": "2026-09-08T19:03:50.000Z",
+    "marketState": "REGULAR",
+    "relativeVolumeSessionAdjusted": true,
+    "universeSize": 503,
+    "matchedCount": 0,
+    "filters": {
+      "minMarketCap": 5000000000,
+      "minPrice": 0,
+      "minAvgVolume": 0,
+      "maxDistanceFromHigh": 8,
+      "minRelativeVolume": 1,
+      "exchange": "all",
+      "requireAboveMa": true
+    },
+    "stocks": [],
+    "partial": false
+  }
+}
