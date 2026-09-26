@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { WatchlistProvider } from "@/components/WatchlistProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Takeoff — Breakout stock screener",
   description:
-    "Find US large-cap stocks setting up for a breakout: near 52-week highs, elevated volume, and holding above the 50-day trend.",
+    "Find US large-cap stocks setting up for a fresh breakout: near 52-week highs, expanding volume, a rising trend, and a tight range.",
 };
 
 export default function RootLayout({
@@ -26,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <WatchlistProvider>{children}</WatchlistProvider>
       </body>
     </html>
   );

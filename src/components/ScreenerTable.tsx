@@ -1,6 +1,9 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import Link from "next/link";
+import { StockScoreDetail } from "@/components/StockScoreDetail";
+import { useWatchlist } from "@/components/WatchlistProvider";
 import {
   formatCompactNumber,
   formatCurrency,
@@ -21,75 +24,12 @@ function changeClass(value: number | null): string {
   return "text-muted";
 }
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  return (
-    <div>
-      <div className="mb-1 flex justify-between text-xs text-muted">
-        <span>{label}</span>
-        <span>{value}</span>
-      </div>
-      <div className="h-1.5 rounded-full bg-background">
-        <div
-          className="h-full rounded-full bg-accent"
-          style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function StockDetail({ stock }: { stock: StockRow }) {
-  return (
-    <div className="grid gap-4 border-t border-panel-border bg-background/40 px-4 py-4 sm:grid-cols-2">
-      <div className="space-y-3">
-        <h4 className="text-sm font-semibold text-foreground">Score inputs</h4>
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-          <dt className="text-muted">52-week high</dt>
-          <dd>{formatCurrency(stock.fiftyTwoWeekHigh)}</dd>
-          <dt className="text-muted">Distance to high</dt>
-          <dd>
-            {stock.distanceFromHighPct == null
-              ? "—"
-              : `${stock.distanceFromHighPct.toFixed(2)}%`}
-          </dd>
-          <dt className="text-muted">Today&apos;s volume</dt>
-          <dd>{formatCompactNumber(stock.volume)}</dd>
-          <dt className="text-muted">3-mo avg volume</dt>
-          <dd>{formatCompactNumber(stock.avgVolume)}</dd>
-          <dt className="text-muted">50-day MA</dt>
-          <dd>{formatCurrency(stock.fiftyDayAverage)}</dd>
-          <dt className="text-muted">Trend check</dt>
-          <dd>
-            {stock.aboveFiftyDayMa == null
-              ? "Unavailable"
-              : stock.aboveFiftyDayMa
-                ? "Above 50-day MA"
-                : "Below 50-day MA"}
-          </dd>
-        </dl>
-      </div>
-      <div className="space-y-3">
-        <h4 className="text-sm font-semibold text-foreground">Score breakdown</h4>
-        <div className="space-y-3">
-          <ScoreBar label="Proximity to 52w high" value={stock.scoreBreakdown.proximityScore} />
-          <ScoreBar label="Relative volume" value={stock.scoreBreakdown.volumeScore} />
-          <ScoreBar label="Trend (50-day MA)" value={stock.scoreBreakdown.trendScore} />
-        </div>
-        {stock.missingFields.length > 0 && (
-          <p className="text-xs text-warning">
-            Missing fields: {stock.missingFields.join(", ")}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export function ScreenerTable({
   stocks,
   relativeVolumeSessionAdjusted = false,
 }: ScreenerTableProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const { has, add, remove } = useWatchlist();
 
   if (stocks.length === 0) {
     return (
@@ -138,8 +78,30 @@ export function ScreenerTable({
                     onClick={() => setExpanded(isOpen ? null : stock.symbol)}
                   >
                     <td className="px-4 py-3 align-top">
-                      <div className="font-semibold text-accent">{stock.symbol}</div>
+                      <Link
+                        href={`/ticker/${stock.symbol}`}
+                        onClick={(event) => event.stopPropagation()}
+                        className="font-semibold text-accent underline-offset-2 hover:underline"
+                      >
+                        {stock.symbol}
+                      </Link>
                       <div className="max-w-48 truncate text-xs text-muted">{stock.name}</div>
+                      <button
+                        type="button"
+                        aria-label={
+                          has(stock.symbol)
+                            ? `Remove ${stock.symbol} from watchlist`
+                            : `Add ${stock.symbol} to watchlist`
+                        }
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (has(stock.symbol)) remove(stock.symbol);
+                          else add(stock.symbol);
+                        }}
+                        className="mt-1 rounded border border-panel-border px-2 py-0.5 text-xs text-muted hover:border-accent hover:text-foreground"
+                      >
+                        {has(stock.symbol) ? "Remove" : "Watch"}
+                      </button>
                     </td>
                     <td className="px-4 py-3 align-top font-mono">{formatCurrency(stock.price)}</td>
                     <td className={`px-4 py-3 align-top font-mono ${changeClass(stock.changePct)}`}>
@@ -168,7 +130,9 @@ export function ScreenerTable({
                   {isOpen && (
                     <tr className="border-b border-panel-border">
                       <td colSpan={8} className="p-0">
-                        <StockDetail stock={stock} />
+                        <div className="border-t border-panel-border bg-background/40 px-4 py-4">
+                          <StockScoreDetail stock={stock} />
+                        </div>
                         <p className="border-t border-panel-border px-4 py-3 text-sm text-muted lg:hidden">
                           {stock.reason}
                         </p>

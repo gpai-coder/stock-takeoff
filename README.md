@@ -15,11 +15,17 @@ Each match gets a **Takeoff score (0–100)** with visible inputs:
 
 | Component | Weight | Inputs |
 |-----------|--------|--------|
-| Proximity to 52w high | 40% | Distance below the 52-week high |
-| Relative volume | 35% | Today’s volume vs. 3-month average |
-| Trend | 25% | Price vs. 50-day MA |
+| Proximity to 52w high | 28% | Distance below the 52-week high, reduced when price is extended above the 50-day MA |
+| Relative volume | 24% | Today’s volume vs. 3-month average; ~1.0× is a low score, real expansion scores high |
+| Trend stack | 22% | Price above a rising 50-day MA, and above the 200-day MA when Yahoo has it |
+| Tight range | 16% | Last 10 sessions coiled, not already vertical. Omitted if history is missing |
+| Close in range | 10% | Close in the upper part of the session range. Omitted if the range is missing |
 
-Results sort by score descending. Click a row to expand raw inputs and score breakdown.
+Weights sum to 1. A missing component is left out and the rest are rescaled. Nothing is invented when Yahoo has no history.
+
+Results sort by score descending. Click a row to expand raw inputs and score breakdown. Use **Watch** on a row, or type a ticker, to save a watchlist in this browser (`takeoff-watchlist`). Open **Watchlist** to see price, score, relative volume, and distance from the 52-week high even when that symbol is filtered out of the screener.
+
+Click a ticker — or use symbol search — to open `/ticker/[symbol]` for the 50-day and 200-day averages, the 52-week range, the score breakdown, a plain-language read, and a recent-close chart.
 
 ## Filters
 

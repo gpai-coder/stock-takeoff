@@ -1,0 +1,65 @@
+{
+  "asOf": "2026-09-25T20:04:31.000Z",
+  "marketState": "CLOSED",
+  "relativeVolumeSessionAdjusted": false,
+  "universeSize": 503,
+  "matchedCount": 1,
+  "filters": {
+    "minMarketCap": 5000000000,
+    "minPrice": 0,
+    "minAvgVolume": 0,
+    "maxDistanceFromHigh": 5,
+    "minRelativeVolume": 1.5,
+    "exchange": "all",
+    "requireAboveMa": true
+  },
+  "stocks": [
+    {
+      "symbol": "ILMN",
+      "name": "Illumina, Inc.",
+      "exchange": "NasdaqGS",
+      "price": 270,
+      "changePct": -1.4238751,
+      "marketCap": 40769998848,
+      "avgVolume": 2566846,
+      "volume": 5027387,
+      "relativeVolume": 1.9585853611786606,
+      "fiftyTwoWeekHigh": 277.95,
+      "fiftyTwoWeekLow": 88,
+      "distanceFromHighPct": 2.860226659471124,
+      "fiftyDayAverage": 210.7958,
+      "twoHundredDayAverage": 159.288,
+      "aboveFiftyDayMa": true,
+      "aboveTwoHundredDayMa": true,
+      "dayHigh": 276.97,
+      "dayLow": 267.66,
+      "score": 43.7,
+      "scoreBreakdown": {
+        "proximityScore": 11,
+        "volumeScore": 68,
+        "trendScore": 100,
+        "coilScore": 0,
+        "closeLocationScore": 25,
+        "unavailable": []
+      },
+      "scoreInputs": {
+        "distanceFromHighPct": 2.860226659471124,
+        "relativeVolume": 1.9585853611786606,
+        "aboveFiftyDayMa": true,
+        "priceToMaPct": 28.086043460068932,
+        "fiftyDayRising": true,
+        "aboveTwoHundredDayMa": true,
+        "priceToTwoHundredMaPct": 69.50429410878408,
+        "recentRangePct": 27.825927734375,
+        "recentReturnPct": 30.782273669730326,
+        "closeLocation": 0.2513426423200832
+      },
+      "reason": "Extended setup: 2.9% below 52w high, 1.96\u00d7 avg volume, above 50-day MA, 50-day MA rising, above 200-day MA, 28.1% extended above 50-day, 27.8% 10-day range",
+      "setupRead": "This looks extended rather than a fresh takeoff. Price is already stretched above the 50-day average or the last 10 sessions have run steeply, which is a chase more than a new break.",
+      "quoteTime": 1790366401000,
+      "marketState": "CLOSED",
+      "missingFields": []
+    }
+  ],
+  "partial": false
+}
