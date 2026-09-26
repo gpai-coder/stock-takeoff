@@ -1,6 +1,7 @@
 import { FilterBar } from "@/components/FilterBar";
 import { ScreenerTable } from "@/components/ScreenerTable";
 import { formatDateTime, formatMarketState } from "@/lib/format";
+import { SCORE_WEIGHTS, formatWeightShare } from "@/lib/scoring";
 import { getScreenerResults } from "@/lib/screener";
 import type { ScreenerSearchParams } from "@/lib/types";
 
@@ -24,8 +25,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </p>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Takeoff</h1>
           <p className="max-w-3xl text-base text-muted sm:text-lg">
-            Spot S&amp;P 500 names setting up for a breakout: trading near their 52-week high on
-            elevated relative volume while holding above the 50-day moving average.
+            Spot S&amp;P 500 names setting up for a fresh breakout: near their 52-week high with
+            expanding volume, a rising trend, and a tight range — not names that are already
+            extended.
           </p>
           <div className="flex flex-wrap gap-3 text-sm text-muted">
             <span className="rounded-full border border-panel-border px-3 py-1">
@@ -73,8 +75,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 for an average day, not a full day&apos;s volume by mid-morning.
               </>
             )}{" "}
-            Takeoff score weights proximity to the 52-week high (40%), relative volume (35%), and
-            trend vs. the 50-day MA (25%). This is research tooling, not investment advice.
+            Takeoff score weights a fresh setup: proximity to the 52-week high, reduced when price
+            is extended above the 50-day MA ({formatWeightShare(SCORE_WEIGHTS.proximity)}), relative
+            volume that needs real expansion ({formatWeightShare(SCORE_WEIGHTS.volume)}), a trend
+            stack of price above a rising 50-day MA and above the 200-day MA when Yahoo has it
+            ({formatWeightShare(SCORE_WEIGHTS.trend)}), a tight recent range instead of a vertical
+            move ({formatWeightShare(SCORE_WEIGHTS.coil)}), and a close in the upper part of the
+            session range when that range exists ({formatWeightShare(SCORE_WEIGHTS.closeLocation)}).
+            If a component is missing it is left out and the remaining weights are rescaled. This
+            is research tooling, not investment advice.
           </p>
         </footer>
       </div>

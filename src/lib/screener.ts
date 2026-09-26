@@ -1,105 +1,46 @@
 import { unstable_cache } from "next/cache";
 import { passesFilters, parseFilters } from "./filters";
 import {
+  deriveSetupMetrics,
+  loadDailyHistory,
+  mapPool,
+} from "./history";
+import {
   getRegularSessionElapsedFraction,
   isRegularUsSession,
-  sessionAdjustedRelativeVolume,
 } from "./market-session";
-import { buildReason, computeTakeoffScore } from "./scoring";
-import type {
-  ScoreInputs,
-  ScreenerFilters,
-  ScreenerResult,
-  ScreenerSearchParams,
-  StockRow,
-} from "./types";
+import { buildStockRow, type RelativeVolumeContext } from "./stock";
+import type { ScreenerFilters, ScreenerResult, ScreenerSearchParams, StockRow } from "./types";
 import { getSp500Universe } from "./universe";
 import { fetchQuotes, quoteTimestamp, type RawQuote } from "./yahoo";
 
 const QUOTE_CACHE_SECONDS = 300;
+const HISTORY_CONCURRENCY = 8;
 
-function nullableNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function distanceFromHigh(price: number | null, high: number | null): number | null {
-  if (price == null || high == null || high <= 0) return null;
-  return ((high - price) / high) * 100;
-}
-
-interface RelativeVolumeContext {
-  sessionAdjusted: boolean;
-  elapsedFraction: number;
-}
-
-function mapQuoteToStock(
-  quote: RawQuote,
-  fallbackName: string,
+async function enrichMatches(
+  matches: StockRow[],
+  quotesBySymbol: Map<string, RawQuote>,
+  nameBySymbol: Map<string, string>,
   filters: ScreenerFilters,
   relativeVolumeContext: RelativeVolumeContext,
-): StockRow {
-  const missingFields: string[] = [];
-  const price = nullableNumber(quote.regularMarketPrice);
-  const changePct = nullableNumber(quote.regularMarketChangePercent);
-  const marketCap = nullableNumber(quote.marketCap);
-  const avgVolume = nullableNumber(quote.averageDailyVolume3Month);
-  const volume = nullableNumber(quote.regularMarketVolume);
-  const fiftyTwoWeekHigh = nullableNumber(quote.fiftyTwoWeekHigh);
-  const fiftyDayAverage = nullableNumber(quote.fiftyDayAverage);
-
-  if (price == null) missingFields.push("price");
-  if (marketCap == null) missingFields.push("market cap");
-  if (avgVolume == null) missingFields.push("avg volume");
-  if (volume == null) missingFields.push("volume");
-  if (fiftyTwoWeekHigh == null) missingFields.push("52w high");
-  if (fiftyDayAverage == null) missingFields.push("50-day MA");
-
-  const distanceFromHighPct = distanceFromHigh(price, fiftyTwoWeekHigh);
-  const relVolume = sessionAdjustedRelativeVolume(volume, avgVolume, {
-    sessionAdjusted: relativeVolumeContext.sessionAdjusted,
-    elapsedFraction: relativeVolumeContext.elapsedFraction,
+): Promise<StockRow[]> {
+  return mapPool(matches, HISTORY_CONCURRENCY, async (stock) => {
+    const quote = quotesBySymbol.get(stock.symbol);
+    if (!quote) return stock;
+    try {
+      const bars = await loadDailyHistory(stock.symbol);
+      const metrics = deriveSetupMetrics(bars);
+      return buildStockRow(
+        quote,
+        nameBySymbol.get(quote.symbol) ?? stock.name,
+        filters,
+        relativeVolumeContext,
+        metrics,
+      );
+    } catch {
+      return stock;
+    }
   });
-  const aboveFiftyDayMa =
-    price != null && fiftyDayAverage != null ? price >= fiftyDayAverage : null;
-  const priceToMaPct =
-    price != null && fiftyDayAverage != null && fiftyDayAverage > 0
-      ? ((price - fiftyDayAverage) / fiftyDayAverage) * 100
-      : null;
-
-  const scoreInputs: ScoreInputs = {
-    distanceFromHighPct,
-    relativeVolume: relVolume,
-    aboveFiftyDayMa,
-    priceToMaPct,
-  };
-
-  const { score, breakdown } = computeTakeoffScore(
-    scoreInputs,
-    filters.maxDistanceFromHigh,
-  );
-
-  return {
-    symbol: quote.symbol,
-    name: quote.longName ?? quote.shortName ?? fallbackName,
-    exchange: quote.fullExchangeName ?? "Unknown",
-    price,
-    changePct,
-    marketCap,
-    avgVolume,
-    volume,
-    relativeVolume: relVolume,
-    fiftyTwoWeekHigh,
-    distanceFromHighPct,
-    fiftyDayAverage,
-    aboveFiftyDayMa,
-    score,
-    scoreBreakdown: breakdown,
-    scoreInputs,
-    reason: buildReason(scoreInputs, breakdown),
-    quoteTime: quoteTimestamp(quote),
-    marketState: quote.marketState ?? null,
-    missingFields,
-  };
 }
 
 async function runScreener(filters: ScreenerFilters): Promise<ScreenerResult> {
@@ -109,8 +50,7 @@ async function runScreener(filters: ScreenerFilters): Promise<ScreenerResult> {
 
   const { quotes, failedSymbols } = await fetchQuotes(symbols);
 
-  const marketState =
-    quotes.find((quote) => quote.marketState)?.marketState ?? null;
+  const marketState = quotes.find((quote) => quote.marketState)?.marketState ?? null;
   const latestQuoteTime = quotes
     .map((quote) => quoteTimestamp(quote))
     .filter((time): time is number => time != null)
@@ -124,8 +64,13 @@ async function runScreener(filters: ScreenerFilters): Promise<ScreenerResult> {
       : 1,
   };
 
+  const quotesBySymbol = new Map<string, RawQuote>();
+  for (const quote of quotes) {
+    quotesBySymbol.set(quote.symbol, quote);
+  }
+
   const stocks = quotes.map((quote) =>
-    mapQuoteToStock(
+    buildStockRow(
       quote,
       nameBySymbol.get(quote.symbol) ?? quote.symbol,
       filters,
@@ -133,20 +78,24 @@ async function runScreener(filters: ScreenerFilters): Promise<ScreenerResult> {
     ),
   );
 
-  const filtered = stocks
-    .filter((stock) => passesFilters(stock, filters))
-    .sort((a, b) => b.score - a.score || a.symbol.localeCompare(b.symbol));
+  const filtered = stocks.filter((stock) => passesFilters(stock, filters));
+  const enriched = await enrichMatches(
+    filtered,
+    quotesBySymbol,
+    nameBySymbol,
+    filters,
+    relativeVolumeContext,
+  );
+  enriched.sort((a, b) => b.score - a.score || a.symbol.localeCompare(b.symbol));
 
   return {
-    asOf: latestQuoteTime
-      ? referenceTime.toISOString()
-      : new Date().toISOString(),
+    asOf: latestQuoteTime ? referenceTime.toISOString() : new Date().toISOString(),
     marketState,
     relativeVolumeSessionAdjusted,
     universeSize: symbols.length,
-    matchedCount: filtered.length,
+    matchedCount: enriched.length,
     filters,
-    stocks: filtered,
+    stocks: enriched,
     partial: failedSymbols.length > 0,
     error:
       quotes.length === 0
@@ -162,7 +111,7 @@ const getCachedScreener = unstable_cache(
     const filters = JSON.parse(filtersKey) as ScreenerFilters;
     return runScreener(filters);
   },
-  ["takeoff-screener"],
+  ["takeoff-screener-v2"],
   { revalidate: QUOTE_CACHE_SECONDS },
 );
 

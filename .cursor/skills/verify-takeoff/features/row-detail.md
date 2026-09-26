@@ -6,7 +6,7 @@ Each table row expands on click to show the raw inputs behind the Takeoff score 
 
 - Expandable row (click ticker row to toggle)
 - **Score inputs** panel: 52-week high, distance to high, today's volume, 3-mo avg volume, 50-day MA, trend check
-- **Score breakdown** bars: Proximity to 52w high (40%), Relative volume (35%), Trend / 50-day MA (25%)
+- **Score breakdown** bars: Proximity to 52w high (28%, reduced if extended above the 50-day MA), Relative volume (24%), Trend stack (22%), Tight range (16%), Close in range (10%). A missing component shows Unavailable and is left out of the composite.
 - Missing-field warning when Yahoo data is incomplete
 
 ## How to get to it (user POV)
@@ -22,7 +22,7 @@ python3 .cursor/skills/verify-takeoff/scripts/drive_api.py \
   --out .cursor/skills/verify-takeoff/artifacts/default.json
 ```
 
-Inspect `stocks[0]` for `scoreBreakdown` (`proximityScore`, `volumeScore`, `trendScore`), `scoreInputs`, `fiftyTwoWeekHigh`, `volume`, `avgVolume`, `fiftyDayAverage`, and `missingFields`. UI proof: expand the top-ranked row and compare values.
+Inspect `stocks[0]` for `scoreBreakdown` (`proximityScore`, `volumeScore`, `trendScore`, `coilScore`, `closeLocationScore`, `unavailable`), `scoreInputs` (including `priceToMaPct`, `fiftyDayRising`, `aboveTwoHundredDayMa`, `recentRangePct`, `closeLocation`), and `missingFields`. UI proof: expand the top-ranked row and compare values.
 
 ## Gotchas
 

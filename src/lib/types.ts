@@ -32,12 +32,22 @@ export interface ScoreInputs {
   relativeVolume: number | null;
   aboveFiftyDayMa: boolean | null;
   priceToMaPct: number | null;
+  fiftyDayRising: boolean | null;
+  aboveTwoHundredDayMa: boolean | null;
+  priceToTwoHundredMaPct: number | null;
+  recentRangePct: number | null;
+  recentReturnPct: number | null;
+  closeLocation: number | null;
 }
 
 export interface ScoreBreakdown {
   proximityScore: number;
   volumeScore: number;
   trendScore: number;
+  coilScore: number | null;
+  closeLocationScore: number | null;
+  /** Components omitted from the composite. Remaining weights are rescaled to 1. */
+  unavailable: string[];
 }
 
 export interface StockRow {
@@ -51,16 +61,27 @@ export interface StockRow {
   volume: number | null;
   relativeVolume: number | null;
   fiftyTwoWeekHigh: number | null;
+  fiftyTwoWeekLow: number | null;
   distanceFromHighPct: number | null;
   fiftyDayAverage: number | null;
+  twoHundredDayAverage: number | null;
   aboveFiftyDayMa: boolean | null;
+  aboveTwoHundredDayMa: boolean | null;
+  dayHigh: number | null;
+  dayLow: number | null;
   score: number;
   scoreBreakdown: ScoreBreakdown;
   scoreInputs: ScoreInputs;
   reason: string;
+  setupRead: string;
   quoteTime: number | null;
   marketState: string | null;
   missingFields: string[];
+}
+
+export interface PricePoint {
+  date: string;
+  close: number;
 }
 
 export interface ScreenerResult {

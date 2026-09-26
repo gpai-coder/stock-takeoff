@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Takeoff — Breakout stock screener",
   description:
-    "Find US large-cap stocks setting up for a breakout: near 52-week highs, elevated volume, and holding above the 50-day trend.",
+    "Find US large-cap stocks setting up for a fresh breakout: near 52-week highs, expanding volume, a rising trend, and a tight range.",
 };
 
 export default function RootLayout({
