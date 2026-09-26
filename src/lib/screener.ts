@@ -5,14 +5,11 @@ import {
   loadDailyHistory,
   mapPool,
 } from "./history";
-import {
-  getRegularSessionElapsedFraction,
-  isRegularUsSession,
-} from "./market-session";
+import { describeQuoteSession } from "./quote-session";
 import { buildStockRow, type RelativeVolumeContext } from "./stock";
 import type { ScreenerFilters, ScreenerResult, ScreenerSearchParams, StockRow } from "./types";
 import { getSp500Universe } from "./universe";
-import { fetchQuotes, quoteTimestamp, type RawQuote } from "./yahoo";
+import { fetchQuotes, type RawQuote } from "./yahoo";
 
 const QUOTE_CACHE_SECONDS = 300;
 const HISTORY_CONCURRENCY = 8;
@@ -50,19 +47,8 @@ async function runScreener(filters: ScreenerFilters): Promise<ScreenerResult> {
 
   const { quotes, failedSymbols } = await fetchQuotes(symbols);
 
-  const marketState = quotes.find((quote) => quote.marketState)?.marketState ?? null;
-  const latestQuoteTime = quotes
-    .map((quote) => quoteTimestamp(quote))
-    .filter((time): time is number => time != null)
-    .sort((a, b) => b - a)[0];
-  const referenceTime = latestQuoteTime ? new Date(latestQuoteTime) : new Date();
-  const relativeVolumeSessionAdjusted = isRegularUsSession(marketState);
-  const relativeVolumeContext: RelativeVolumeContext = {
-    sessionAdjusted: relativeVolumeSessionAdjusted,
-    elapsedFraction: relativeVolumeSessionAdjusted
-      ? getRegularSessionElapsedFraction(referenceTime)
-      : 1,
-  };
+  const session = describeQuoteSession(quotes);
+  const { marketState, asOf, relativeVolumeSessionAdjusted, relativeVolumeContext } = session;
 
   const quotesBySymbol = new Map<string, RawQuote>();
   for (const quote of quotes) {
@@ -89,7 +75,7 @@ async function runScreener(filters: ScreenerFilters): Promise<ScreenerResult> {
   enriched.sort((a, b) => b.score - a.score || a.symbol.localeCompare(b.symbol));
 
   return {
-    asOf: latestQuoteTime ? referenceTime.toISOString() : new Date().toISOString(),
+    asOf,
     marketState,
     relativeVolumeSessionAdjusted,
     universeSize: symbols.length,

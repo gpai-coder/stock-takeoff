@@ -37,6 +37,20 @@ const yahooFinance = new YahooFinance({
 
 const BATCH_SIZE = 50;
 
+function asQuotes(values: unknown[]): RawQuote[] {
+  return values.filter(isQuote);
+}
+
+function isQuote(value: unknown): value is RawQuote {
+  return (
+    value != null &&
+    typeof value === "object" &&
+    "symbol" in value &&
+    typeof (value as { symbol?: unknown }).symbol === "string" &&
+    (value as { symbol: string }).symbol.length > 0
+  );
+}
+
 function chunk<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < items.length; i += size) {
@@ -56,13 +70,13 @@ export async function fetchQuotes(symbols: string[]): Promise<{
   for (const batch of batches) {
     try {
       const result = await yahooFinance.quote(batch);
-      const rows = Array.isArray(result) ? result : [result];
-      quotes.push(...(rows as RawQuote[]));
+      quotes.push(...asQuotes(Array.isArray(result) ? result : [result]));
     } catch {
       for (const symbol of batch) {
         try {
           const single = await yahooFinance.quote(symbol);
-          quotes.push(single as RawQuote);
+          if (isQuote(single)) quotes.push(single);
+          else failedSymbols.push(symbol);
         } catch {
           failedSymbols.push(symbol);
         }

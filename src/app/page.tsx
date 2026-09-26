@@ -1,5 +1,7 @@
+import { AddTickerForm } from "@/components/AddTickerForm";
 import { FilterBar } from "@/components/FilterBar";
 import { ScreenerTable } from "@/components/ScreenerTable";
+import { SiteNav } from "@/components/SiteNav";
 import { formatDateTime, formatMarketState } from "@/lib/format";
 import { SCORE_WEIGHTS, formatWeightShare } from "@/lib/scoring";
 import { getScreenerResults } from "@/lib/screener";
@@ -19,6 +21,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(61,214,198,0.12),_transparent_35%)]">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+        <SiteNav />
+
         <header className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">
             US equities screener
@@ -44,6 +48,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </span>
           </div>
         </header>
+
+        <section className="rounded-2xl border border-panel-border bg-panel p-4 sm:p-5">
+          <AddTickerForm />
+        </section>
 
         <FilterBar filters={result.filters} />
 

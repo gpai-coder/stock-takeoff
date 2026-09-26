@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import { useWatchlist } from "@/components/WatchlistProvider";
 import {
   formatCompactNumber,
   formatCurrency,
@@ -203,6 +204,7 @@ export function ScreenerTable({
   relativeVolumeSessionAdjusted = false,
 }: ScreenerTableProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const { has, add, remove } = useWatchlist();
 
   if (stocks.length === 0) {
     return (
@@ -253,6 +255,22 @@ export function ScreenerTable({
                     <td className="px-4 py-3 align-top">
                       <div className="font-semibold text-accent">{stock.symbol}</div>
                       <div className="max-w-48 truncate text-xs text-muted">{stock.name}</div>
+                      <button
+                        type="button"
+                        aria-label={
+                          has(stock.symbol)
+                            ? `Remove ${stock.symbol} from watchlist`
+                            : `Add ${stock.symbol} to watchlist`
+                        }
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (has(stock.symbol)) remove(stock.symbol);
+                          else add(stock.symbol);
+                        }}
+                        className="mt-1 rounded border border-panel-border px-2 py-0.5 text-xs text-muted hover:border-accent hover:text-foreground"
+                      >
+                        {has(stock.symbol) ? "Remove" : "Watch"}
+                      </button>
                     </td>
                     <td className="px-4 py-3 align-top font-mono">{formatCurrency(stock.price)}</td>
                     <td className={`px-4 py-3 align-top font-mono ${changeClass(stock.changePct)}`}>

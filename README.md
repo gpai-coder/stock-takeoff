@@ -23,7 +23,7 @@ Each match gets a **Takeoff score (0–100)** with visible inputs:
 
 Weights sum to 1. A missing component is left out and the rest are rescaled. Nothing is invented when Yahoo has no history.
 
-Results sort by score descending. Click a row to expand raw inputs and score breakdown.
+Results sort by score descending. Click a row to expand raw inputs and score breakdown. Use **Watch** on a row, or type a ticker, to save a watchlist in this browser (`takeoff-watchlist`). Open **Watchlist** to see price, score, relative volume, and distance from the 52-week high even when that symbol is filtered out of the screener.
 
 ## Filters
 
