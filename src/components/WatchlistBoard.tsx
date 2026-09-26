@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AddTickerForm } from "@/components/AddTickerForm";
 import { useWatchlist } from "@/components/WatchlistProvider";
 import {
@@ -153,7 +154,12 @@ export function WatchlistBoard() {
                   return (
                     <tr key={symbol} className="border-b border-panel-border">
                       <td className="px-4 py-3 align-top">
-                        <div className="font-semibold text-accent">{stock.symbol}</div>
+                        <Link
+                          href={`/ticker/${stock.symbol}`}
+                          className="font-semibold text-accent underline-offset-2 hover:underline"
+                        >
+                          {stock.symbol}
+                        </Link>
                         <div className="max-w-48 truncate text-xs text-muted">{stock.name}</div>
                       </td>
                       <td className="px-4 py-3 align-top">

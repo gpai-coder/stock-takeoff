@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { TickerSearch } from "@/components/TickerSearch";
 import { useWatchlist } from "@/components/WatchlistProvider";
 
 export function SiteNav() {
@@ -17,13 +18,16 @@ export function SiteNav() {
     }`;
 
   return (
-    <nav className="flex flex-wrap items-center gap-2 text-sm">
-      <Link href="/" className={linkClass("/")}>
-        Screener
-      </Link>
-      <Link href="/watchlist" className={linkClass("/watchlist")}>
-        Watchlist{count == null ? "" : ` (${count})`}
-      </Link>
+    <nav className="flex flex-wrap items-center justify-between gap-3 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <Link href="/" className={linkClass("/")}>
+          Screener
+        </Link>
+        <Link href="/watchlist" className={linkClass("/watchlist")}>
+          Watchlist{count == null ? "" : ` (${count})`}
+        </Link>
+      </div>
+      <TickerSearch />
     </nav>
   );
 }

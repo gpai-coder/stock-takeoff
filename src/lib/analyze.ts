@@ -3,9 +3,8 @@ import { deriveSetupMetrics, loadDailyHistory, mapPool } from "./history";
 import { describeQuoteSession } from "./quote-session";
 import { parseTickerList } from "./symbols";
 import { buildStockRow } from "./stock";
-import type { StockRow } from "./types";
-import { DEFAULT_FILTERS } from "./types";
-import { fetchQuotes, type RawQuote } from "./yahoo";
+import { DEFAULT_FILTERS, type PricePoint, type StockRow } from "./types";
+import { fetchQuotes, type DailyBar, type RawQuote } from "./yahoo";
 
 const ANALYSIS_CACHE_SECONDS = 300;
 const HISTORY_CONCURRENCY = 8;
@@ -87,6 +86,54 @@ const getCachedAnalysis = unstable_cache(
   ["takeoff-symbol-analysis"],
   { revalidate: ANALYSIS_CACHE_SECONDS },
 );
+
+export interface TickerAnalysis {
+  symbol: string;
+  asOf: string;
+  marketState: string | null;
+  relativeVolumeSessionAdjusted: boolean;
+  stock: StockRow | null;
+  chart: PricePoint[];
+  error?: string;
+}
+
+function chartPoints(bars: DailyBar[]): PricePoint[] {
+  const points: PricePoint[] = [];
+  for (const bar of bars) {
+    if (bar.close == null || !Number.isFinite(bar.close)) continue;
+    points.push({ date: bar.date, close: bar.close });
+  }
+  return points.slice(-120);
+}
+
+export async function getTickerAnalysis(raw: string): Promise<TickerAnalysis> {
+  const symbol = parseTickerList(raw, 1)[0];
+  if (!symbol) {
+    return {
+      symbol: raw.trim().toUpperCase() || raw,
+      asOf: new Date().toISOString(),
+      marketState: null,
+      relativeVolumeSessionAdjusted: false,
+      stock: null,
+      chart: [],
+      error: "That is not a valid ticker.",
+    };
+  }
+
+  const analysis = await analyzeSymbols([symbol]);
+  const stock = analysis.stocks.find((row) => row.symbol.toUpperCase() === symbol) ?? null;
+  const chart = stock ? chartPoints(await loadDailyHistory(symbol)) : [];
+
+  return {
+    symbol,
+    asOf: analysis.asOf,
+    marketState: analysis.marketState,
+    relativeVolumeSessionAdjusted: analysis.relativeVolumeSessionAdjusted,
+    stock,
+    chart,
+    error: stock ? undefined : analysis.error ?? `No quote for ${symbol}.`,
+  };
+}
 
 export async function analyzeSymbols(raw: string[]): Promise<SymbolAnalysis> {
   const symbols = parseTickerList(raw.join(","), MAX_SYMBOLS);

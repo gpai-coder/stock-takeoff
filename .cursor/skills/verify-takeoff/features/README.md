@@ -10,5 +10,6 @@ Index of user-visible features and how to verify them with the verify-takeoff sk
 | Session rel vol | `*` on Rel vol column during REGULAR market hours | [session-rel-vol.md](session-rel-vol.md) |
 | Takeoff score | Fresh-breakout score: proximity haircut, volume expansion, trend stack, coil, close location | [takeoff-score.md](takeoff-score.md) |
 | Watchlist | Saved tickers in localStorage, including names filtered off the screener | [watchlist.md](watchlist.md) |
+| Ticker analysis | `/ticker/[symbol]` quote, moving averages, score read, and recent-close chart | [ticker-analysis.md](ticker-analysis.md) |
 
 Start every run with `scripts/doctor.py`, then drive individual features per the linked docs.

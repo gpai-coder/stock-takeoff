@@ -25,6 +25,8 @@ Weights sum to 1. A missing component is left out and the rest are rescaled. Not
 
 Results sort by score descending. Click a row to expand raw inputs and score breakdown. Use **Watch** on a row, or type a ticker, to save a watchlist in this browser (`takeoff-watchlist`). Open **Watchlist** to see price, score, relative volume, and distance from the 52-week high even when that symbol is filtered out of the screener.
 
+Click a ticker — or use symbol search — to open `/ticker/[symbol]` for the 50-day and 200-day averages, the 52-week range, the score breakdown, a plain-language read, and a recent-close chart.
+
 ## Filters
 
 All filters are applied **on the server** before the page renders:
