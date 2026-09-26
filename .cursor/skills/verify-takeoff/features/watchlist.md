@@ -30,3 +30,5 @@ PY
 ```
 
 `AAPL` should have a price. `NOTAREALTICKER` is not a legal ticker and is ignored; a plausible but unknown symbol such as `ZZZZ` is listed under `missing` with no fabricated price.
+
+Checked locally on 2026-09-26. AAPL was absent from the default screener (relative volume about 0.62×) and still quoted on the watchlist at $341.07. ZZZZ showed "Unavailable — no quote for this symbol." Refresh kept `takeoff-watchlist`.

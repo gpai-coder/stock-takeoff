@@ -28,3 +28,5 @@ python3 .cursor/skills/verify-takeoff/scripts/drive_api.py \
 ```
 
 On a closed session, `relativeVolumeSessionAdjusted` is false.
+
+Checked locally on 2026-09-26 with the market closed. Default filters matched 14 names. MET led at 64.2 with only 1.07× volume, so the read called it a partial setup rather than a fresh takeoff. ILMN was near the high but about 28% above the 50-day average; proximity was reduced and the read called it extended.

@@ -23,3 +23,5 @@ curl -sS -o /dev/null -w "%{http_code}\n" "$TAKEOFF_BASE_URL/api/ticker/ZZZZ"
 ```
 
 A real symbol returns `stock` plus `chart` closes. An unknown symbol returns HTTP 404 with `stock: null` and an error string.
+
+Checked locally on 2026-09-26 with the market closed. `/api/ticker/AAPL` returned a price, both moving averages, a 120-point close series, and a read that volume was not expanded enough to call it a fresh takeoff. `/api/ticker/ZZZZ` and an invalid ticker returned HTTP 404 with `stock: null` and an empty chart.
